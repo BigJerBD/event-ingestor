@@ -55,6 +55,11 @@ pub struct TodoistProject {
     parent_id: Option<String>,
 }
 
+#[derive(Deserialize, Debug)]
+struct PaginatedResponse<T> {
+    results: Vec<T>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TodoistSection {
     id: String,
@@ -276,7 +281,8 @@ async fn get_projects(
         ));
     }
 
-    Ok(response.json().await?)
+    let paginated: PaginatedResponse<TodoistProject> = response.json().await?;
+    Ok(paginated.results)
 }
 
 async fn get_section(

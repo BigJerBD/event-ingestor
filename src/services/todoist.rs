@@ -84,7 +84,13 @@ pub async fn webhook(
     let event_name = event.event_name.clone();
     let payload: serde_json::Value =
         serde_json::from_slice(&body).unwrap();
-    let projects = get_projects(&config).await.unwrap();
+    let projects = match get_projects(&config).await {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("Failed to fetch projects: {}", e);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
 
     debug!("event: {:?}", event);
     debug!("projects: {:?}", projects);
@@ -124,7 +130,7 @@ pub async fn webhook(
         .await
         .unwrap();
 
-    HttpResponse::Ok()
+    HttpResponse::Ok().finish()
 }
 
 async fn extract_project_attributes(
@@ -251,23 +257,33 @@ async fn extract_item_section_attributes(
 async fn get_projects(
     config: &TodoistConfig,
 ) -> Result<Vec<TodoistProject>> {
-    Ok(reqwest::Client::new()
+    let response = reqwest::Client::new()
         .get("https://api.todoist.com/rest/v2/projects")
         .header(
             AUTHORIZATION,
             format!("Bearer {}", config.access_token),
         )
         .send()
-        .await?
-        .json()
-        .await?)
+        .await?;
+
+    let status = response.status();
+    if !status.is_success() {
+        let body = response.text().await.unwrap_or_default();
+        return Err(anyhow!(
+            "Todoist API returned status {}: {}",
+            status,
+            body
+        ));
+    }
+
+    Ok(response.json().await?)
 }
 
 async fn get_section(
     id: String,
     config: &TodoistConfig,
 ) -> Result<TodoistSection> {
-    Ok(reqwest::Client::new()
+    let response = reqwest::Client::new()
         .get(format!(
             "https://api.todoist.com/rest/v2/sections/{}",
             id
@@ -277,9 +293,19 @@ async fn get_section(
             format!("Bearer {}", config.access_token),
         )
         .send()
-        .await?
-        .json()
-        .await?)
+        .await?;
+
+    let status = response.status();
+    if !status.is_success() {
+        let body = response.text().await.unwrap_or_default();
+        return Err(anyhow!(
+            "Todoist API returned status {}: {}",
+            status,
+            body
+        ));
+    }
+
+    Ok(response.json().await?)
 }
 
 fn authorize_request(

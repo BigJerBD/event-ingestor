@@ -19,7 +19,7 @@ steps:
       - 'us-central1'
 
 substitutions:
-  _SERVICE_NAME: "event-ingestor"
+  _SERVICE_NAME: "event-ingestor-service"
 
 images:
   - "gcr.io/${PROJECT_ID}/${_SERVICE_NAME}"

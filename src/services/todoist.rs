@@ -258,7 +258,7 @@ async fn get_projects(
     config: &TodoistConfig,
 ) -> Result<Vec<TodoistProject>> {
     let response = reqwest::Client::new()
-        .get("https://api.todoist.com/api/v1/project")
+        .get("https://api.todoist.com/api/v1/projects")
         .header(
             AUTHORIZATION,
             format!("Bearer {}", config.access_token),
@@ -285,7 +285,7 @@ async fn get_section(
 ) -> Result<TodoistSection> {
     let response = reqwest::Client::new()
         .get(format!(
-            "https://api.todoist.com/rest/v1/sections/{}",
+            "https://api.todoist.com/api/v1/sections/{}",
             id
         ))
         .header(

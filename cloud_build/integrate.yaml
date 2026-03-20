@@ -1,6 +1,6 @@
 steps:
   - id: "run test"
-    name: "rust:1.72"
+    name: "rust:1.88"
     args: [ "cargo" ,"test" ]
 
 timeout: 1800s
